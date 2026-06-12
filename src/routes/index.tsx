@@ -504,21 +504,29 @@ function RecommendationCard({
 
 type Filter = "ALL" | "HIGH" | "LOK" | "APPROVED";
 
-function CauseListView() {
+function CauseListView({ t }: { t: (k: string) => string }) {
   const [cases, setCases] = useState<CaseRow[]>(INITIAL_CASES);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [selected, setSelected] = useState<CaseRow | null>(null);
   const [pendingLok, setPendingLok] = useState<CaseRow | null>(null);
+  const [date, setDate] = useState<Date>(new Date("2026-06-12"));
+  const isoDate = date.toISOString().slice(0, 10);
 
   const filtered = useMemo(() => {
     return cases.filter((c) => {
+      if (c.date !== isoDate) return false;
       if (filter === "ALL") return true;
       if (filter === "HIGH") return c.risk === "HIGH";
       if (filter === "LOK") return c.action === "lokadalat";
       if (filter === "APPROVED") return c.status === "approved";
       return true;
     });
-  }, [cases, filter]);
+  }, [cases, filter, isoDate]);
+
+  const dayCases = useMemo(() => cases.filter((c) => c.date === isoDate), [cases, isoDate]);
+  const highCount = dayCases.filter((c) => c.risk === "HIGH").length;
+  const lokCount = dayCases.filter((c) => c.action === "lokadalat").length;
+  const formattedDate = date.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
   const updateRow = (id: string, patch: Partial<CaseRow>) =>
     setCases((all) => all.map((c) => (c.id === id ? { ...c, ...patch } : c)));
@@ -534,22 +542,41 @@ function CauseListView() {
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold">Today&apos;s Cause List</h1>
+          <h1 className="font-serif text-3xl font-semibold">{t("causeList")}</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">
-            <span className="font-mono">Fri, 13 Jun 2026</span> · District Court, Hyderabad
+            <span className="font-mono">{formattedDate}</span> · {t("court")}
           </p>
           <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            18 cases listed · <span className="text-[var(--flag-red)] font-medium">3 high-risk</span> ·{" "}
-            <span className="text-[var(--accent-blue)] font-medium">2 Lok Adalat recommended</span>
+            {dayCases.length} {t("casesListed")} ·{" "}
+            <span className="text-[var(--flag-red)] font-medium">{highCount} {t("highRisk")}</span> ·{" "}
+            <span className="text-[var(--accent-blue)] font-medium">{lokCount} {t("lokRec")}</span>
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-white border border-[var(--rule)] rounded-sm p-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 bg-white border border-[var(--rule)] rounded-sm px-3 py-2 text-xs font-medium hover:border-[var(--accent-blue)] transition-colors">
+                <CalendarIcon size={14} className="text-[var(--accent-blue)]" />
+                <span className="font-mono">{formattedDate}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => d && setDate(d)}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="flex items-center gap-1 bg-white border border-[var(--rule)] rounded-sm p-1">
           {(
             [
-              ["ALL", "All"],
-              ["HIGH", "High Risk"],
-              ["LOK", "Lok Adalat"],
-              ["APPROVED", "Approved"],
+              ["ALL", t("all")],
+              ["HIGH", t("high")],
+              ["LOK", t("lok")],
+              ["APPROVED", t("approved")],
             ] as const
           ).map(([k, label]) => (
             <button
@@ -564,6 +591,7 @@ function CauseListView() {
               {label}
             </button>
           ))}
+          </div>
         </div>
       </div>
 
@@ -571,14 +599,14 @@ function CauseListView() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--ink)] text-[var(--surface)] text-left">
-              <Th>#</Th>
-              <Th>Case ID</Th>
-              <Th>Case Type</Th>
-              <Th>Petitioner vs Respondent</Th>
-              <Th>Hearing</Th>
-              <Th>Judge</Th>
-              <Th>Risk Score</Th>
-              <Th className="text-right pr-4">Action</Th>
+              <Th>{t("colNo")}</Th>
+              <Th>{t("colId")}</Th>
+              <Th>{t("colType")}</Th>
+              <Th>{t("colParties")}</Th>
+              <Th>{t("colHearing")}</Th>
+              <Th>{t("colJudge")}</Th>
+              <Th>{t("colRisk")}</Th>
+              <Th className="text-right pr-4">{t("colAction")}</Th>
             </tr>
           </thead>
           <tbody>
@@ -620,7 +648,7 @@ function CauseListView() {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={8} className="text-center text-sm text-[var(--muted-foreground)] py-10">
-                  No cases match this filter.
+                  {t("noCases")}
                 </td>
               </tr>
             )}
