@@ -11,7 +11,11 @@ import {
   Check,
   FileText,
   Bell,
+  Languages,
+  CalendarIcon,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Sheet,
   SheetContent,
@@ -55,18 +59,62 @@ interface CaseRow {
   action: "intervene" | "review" | "approved" | "lokadalat";
   status: RowStatus;
   reason: string;
+  date: string; // YYYY-MM-DD
 }
 
 const INITIAL_CASES: CaseRow[] = [
-  { id: "NI/2024/1847", type: "Cheque Bounce", petitioner: "Kumar", respondent: "M/s Traders", time: "10:00 AM", judge: "S. Raghunathan", risk: "HIGH", riskPct: 85, action: "intervene", status: "pending", reason: "Respondent counsel has 3 prior adjournments in similar matters." },
-  { id: "CIV/2023/0391", type: "Property Dispute", petitioner: "Lakshmi Devi", respondent: "State of TS", time: "10:30 AM", judge: "P. Anand", risk: "LOW", riskPct: 20, action: "approved", status: "approved", reason: "All parties confirmed; pleadings complete." },
-  { id: "NI/2025/2210", type: "Cheque Bounce", petitioner: "Reddy Infra", respondent: "HDFC Bank", time: "11:00 AM", judge: "S. Raghunathan", risk: "HIGH", riskPct: 90, action: "intervene", status: "pending", reason: "Bank counsel double-booked across two benches." },
-  { id: "FAM/2022/0088", type: "Family Settlement", petitioner: "Sunitha", respondent: "Suresh", time: "11:30 AM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 25, action: "lokadalat", status: "pending", reason: "Both parties expressed willingness to settle." },
-  { id: "CRM/2024/3301", type: "Bail Petition", petitioner: "State", respondent: "D. Naidu", time: "12:00 PM", judge: "P. Anand", risk: "MEDIUM", riskPct: 55, action: "review", status: "pending", reason: "Custody report pending verification." },
-  { id: "NI/2025/1102", type: "Cheque Bounce", petitioner: "Suresh Babu", respondent: "K. Rao", time: "2:00 PM", judge: "S. Raghunathan", risk: "MEDIUM", riskPct: 60, action: "review", status: "pending", reason: "Witness availability uncertain." },
-  { id: "CIV/2021/5509", type: "Land Acquisition", petitioner: "Farmers Assoc.", respondent: "GHMC", time: "2:30 PM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 15, action: "approved", status: "approved", reason: "Documents verified; ready for final hearing." },
-  { id: "FAM/2023/0445", type: "Maintenance", petitioner: "Priya", respondent: "Arun", time: "3:00 PM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 22, action: "lokadalat", status: "pending", reason: "Quantum dispute only; suitable for mediation." },
+  { id: "NI/2024/1847", type: "Cheque Bounce", petitioner: "Kumar", respondent: "M/s Traders", time: "10:00 AM", judge: "S. Raghunathan", risk: "HIGH", riskPct: 85, action: "intervene", status: "pending", reason: "Respondent counsel has 3 prior adjournments in similar matters.", date: "2026-06-12" },
+  { id: "CIV/2023/0391", type: "Property Dispute", petitioner: "Lakshmi Devi", respondent: "State of TS", time: "10:30 AM", judge: "P. Anand", risk: "LOW", riskPct: 20, action: "approved", status: "approved", reason: "All parties confirmed; pleadings complete.", date: "2026-06-12" },
+  { id: "NI/2025/2210", type: "Cheque Bounce", petitioner: "Reddy Infra", respondent: "HDFC Bank", time: "11:00 AM", judge: "S. Raghunathan", risk: "HIGH", riskPct: 90, action: "intervene", status: "pending", reason: "Bank counsel double-booked across two benches.", date: "2026-06-12" },
+  { id: "FAM/2022/0088", type: "Family Settlement", petitioner: "Sunitha", respondent: "Suresh", time: "11:30 AM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 25, action: "lokadalat", status: "pending", reason: "Both parties expressed willingness to settle.", date: "2026-06-12" },
+  { id: "CRM/2024/3301", type: "Bail Petition", petitioner: "State", respondent: "D. Naidu", time: "12:00 PM", judge: "P. Anand", risk: "MEDIUM", riskPct: 55, action: "review", status: "pending", reason: "Custody report pending verification.", date: "2026-06-15" },
+  { id: "NI/2025/1102", type: "Cheque Bounce", petitioner: "Suresh Babu", respondent: "K. Rao", time: "2:00 PM", judge: "S. Raghunathan", risk: "MEDIUM", riskPct: 60, action: "review", status: "pending", reason: "Witness availability uncertain.", date: "2026-06-15" },
+  { id: "CIV/2021/5509", type: "Land Acquisition", petitioner: "Farmers Assoc.", respondent: "GHMC", time: "2:30 PM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 15, action: "approved", status: "approved", reason: "Documents verified; ready for final hearing.", date: "2026-06-16" },
+  { id: "FAM/2023/0445", type: "Maintenance", petitioner: "Priya", respondent: "Arun", time: "3:00 PM", judge: "M. Krishnamurthy", risk: "LOW", riskPct: 22, action: "lokadalat", status: "pending", reason: "Quantum dispute only; suitable for mediation.", date: "2026-06-18" },
 ];
+
+/* ---------------- I18N ---------------- */
+
+type Lang = "en" | "hi" | "te";
+
+const LANG_OPTIONS: { code: Lang; label: string; native: string }[] = [
+  { code: "en", label: "English", native: "English" },
+  { code: "hi", label: "Hindi", native: "हिन्दी" },
+  { code: "te", label: "Telugu", native: "తెలుగు" },
+];
+
+const STRINGS: Record<Lang, Record<string, string>> = {
+  en: {
+    intake: "Case Intake", list: "Cause List", court: "District Court, Hyderabad",
+    aiActive: "AI Active", causeList: "Cause List", on: "on",
+    casesListed: "cases listed", highRisk: "high-risk", lokRec: "Lok Adalat recommended",
+    all: "All", high: "High Risk", lok: "Lok Adalat", approved: "Approved",
+    colNo: "#", colId: "Case ID", colType: "Case Type", colParties: "Petitioner vs Respondent",
+    colHearing: "Hearing", colJudge: "Judge", colRisk: "Risk Score", colAction: "Action",
+    noCases: "No cases scheduled for this date.", pickDate: "Pick a date",
+    util: "Courtroom utilization", adjFlagged: "likely adjournments flagged", smsSent: "Notifications sent to 14 parties via SMS",
+  },
+  hi: {
+    intake: "केस इनटेक", list: "वाद सूची", court: "ज़िला न्यायालय, हैदराबाद",
+    aiActive: "AI सक्रिय", causeList: "वाद सूची", on: "दिनांक",
+    casesListed: "मामले सूचीबद्ध", highRisk: "उच्च जोखिम", lokRec: "लोक अदालत हेतु अनुशंसित",
+    all: "सभी", high: "उच्च जोखिम", lok: "लोक अदालत", approved: "स्वीकृत",
+    colNo: "क्र.", colId: "मामला सं.", colType: "मामले का प्रकार", colParties: "वादी बनाम प्रतिवादी",
+    colHearing: "सुनवाई", colJudge: "न्यायाधीश", colRisk: "जोखिम स्कोर", colAction: "कार्रवाई",
+    noCases: "इस तारीख के लिए कोई मामला सूचीबद्ध नहीं है।", pickDate: "तारीख चुनें",
+    util: "न्यायालय कक्ष उपयोग", adjFlagged: "संभावित स्थगन चिह्नित", smsSent: "14 पक्षों को SMS द्वारा सूचना भेजी गई",
+  },
+  te: {
+    intake: "కేస్ ఇన్‌టేక్", list: "కేసుల జాబితా", court: "జిల్లా న్యాయస్థానం, హైదరాబాద్",
+    aiActive: "AI క్రియాశీలం", causeList: "కేసుల జాబితా", on: "తేదీ",
+    casesListed: "కేసులు జాబితాలో ఉన్నాయి", highRisk: "అధిక ప్రమాదం", lokRec: "లోక్ అదాలత్‌కి సిఫార్సు",
+    all: "అన్నీ", high: "అధిక ప్రమాదం", lok: "లోక్ అదాలత్", approved: "ఆమోదించబడింది",
+    colNo: "క్ర.సం.", colId: "కేస్ ID", colType: "కేస్ రకం", colParties: "ఫిర్యాదీ vs ప్రతివాది",
+    colHearing: "విచారణ", colJudge: "న్యాయమూర్తి", colRisk: "ప్రమాద స్కోర్", colAction: "చర్య",
+    noCases: "ఈ తేదీకి కేసులు లేవు.", pickDate: "తేదీ ఎంచుకోండి",
+    util: "కోర్టు గది వినియోగం", adjFlagged: "వాయిదాలు అంచనా వేయబడ్డాయి", smsSent: "14 పక్షాలకు SMS ద్వారా నోటిఫికేషన్లు పంపబడ్డాయి",
+  },
+};
 
 const riskColor = (r: Risk) =>
   r === "HIGH" ? "var(--flag-red)" : r === "MEDIUM" ? "var(--flag-amber)" : "var(--flag-green)";
@@ -107,19 +155,21 @@ function RiskBadge({ risk }: { risk: Risk }) {
 
 function Index() {
   const [view, setView] = useState<"intake" | "list">("intake");
+  const [lang, setLang] = useState<Lang>("en");
+  const t = (k: string) => STRINGS[lang][k] ?? STRINGS.en[k] ?? k;
 
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)] flex flex-col">
-      <TopNav view={view} setView={setView} />
+      <TopNav view={view} setView={setView} lang={lang} setLang={setLang} t={t} />
       <main className="flex-1">
-        {view === "intake" ? <IntakeView /> : <CauseListView />}
+        {view === "intake" ? <IntakeView /> : <CauseListView t={t} />}
       </main>
       <Footer />
     </div>
   );
 }
 
-function TopNav({ view, setView }: { view: "intake" | "list"; setView: (v: "intake" | "list") => void }) {
+function TopNav({ view, setView, lang, setLang, t }: { view: "intake" | "list"; setView: (v: "intake" | "list") => void; lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string }) {
   return (
     <header className="bg-[var(--ink)] text-[var(--surface)] border-b border-[var(--ink)]">
       <div className="px-6 h-14 flex items-center justify-between">
@@ -130,7 +180,7 @@ function TopNav({ view, setView }: { view: "intake" | "list"; setView: (v: "inta
           <span className="font-serif text-xl font-semibold tracking-tight">NyayaFlow</span>
         </div>
         <nav className="flex items-center gap-1">
-          {([["intake", "Case Intake"], ["list", "Cause List"]] as const).map(([k, label]) => (
+          {([["intake", t("intake")], ["list", t("list")]] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setView(k)}
@@ -145,10 +195,32 @@ function TopNav({ view, setView }: { view: "intake" | "list"; setView: (v: "inta
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[var(--surface)]/70 font-sans">District Court, Hyderabad</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-sm border border-white/20 hover:bg-white/5 transition-colors">
+                <Languages size={14} />
+                <span>{LANG_OPTIONS.find((o) => o.code === lang)?.native}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-44 p-1" align="end">
+              {LANG_OPTIONS.map((o) => (
+                <button
+                  key={o.code}
+                  onClick={() => setLang(o.code)}
+                  className={`w-full text-left px-2 py-1.5 text-sm rounded-sm flex items-center justify-between hover:bg-[var(--surface)] ${
+                    lang === o.code ? "font-medium" : ""
+                  }`}
+                >
+                  <span>{o.native}</span>
+                  <span className="font-mono text-[10px] text-[var(--muted-foreground)] uppercase">{o.code}</span>
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-[var(--surface)]/70 font-sans hidden md:inline">{t("court")}</span>
           <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider px-2 py-1 rounded-sm bg-[var(--flag-green)]/15 text-[var(--flag-green)] border border-[var(--flag-green)]/40">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--flag-green)] animate-pulse" />
-            AI Active
+            {t("aiActive")}
           </span>
         </div>
       </div>
