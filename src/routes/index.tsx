@@ -10,9 +10,7 @@ import {
   ShieldAlert,
   Check,
   FileText,
-  X,
   Bell,
-  ChevronRight,
 } from "lucide-react";
 import {
   Sheet,
