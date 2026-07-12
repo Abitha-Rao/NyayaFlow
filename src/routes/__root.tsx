@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NyayaFlow AI — Judicial Operations" },
-      { name: "description", content: "AI-powered judicial operations platform for Indian district courts." },
+      { title: "NyayaFlow AI - Judicial Operations Platform" },
+      { name: "description", content: "AI-assisted case intake and cause list management for Indian district courts." },
       { name: "author", content: "NyayaFlow" },
-      { property: "og:title", content: "NyayaFlow AI" },
-      { property: "og:description", content: "AI-powered judicial operations platform for Indian district courts." },
+      { property: "og:title", content: "NyayaFlow AI - Judicial Operations Platform" },
+      { property: "og:description", content: "AI-assisted case intake and cause list management for Indian district courts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "NyayaFlow AI - Judicial Operations Platform" },
+      { name: "twitter:description", content: "AI-assisted case intake and cause list management for Indian district courts." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/285d25be-2aa2-46a8-b6c1-353bfe765fa0/id-preview-99b8d2c1--e1e2bbbe-0f48-4565-8b85-05a486761d5d.lovable.app-1781284573639.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/285d25be-2aa2-46a8-b6c1-353bfe765fa0/id-preview-99b8d2c1--e1e2bbbe-0f48-4565-8b85-05a486761d5d.lovable.app-1781284573639.png" },
     ],
     links: [
       {

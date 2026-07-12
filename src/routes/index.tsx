@@ -35,9 +35,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "NyayaFlow AI — Judicial Operations Platform" },
+      { title: "NyayaFlow AI - Judicial Operations Platform" },
       { name: "description", content: "AI-assisted case intake and cause list management for Indian district courts." },
-      { property: "og:title", content: "NyayaFlow AI" },
+      { property: "og:title", content: "NyayaFlow AI - Judicial Operations Platform" },
       { property: "og:description", content: "AI-assisted case intake and cause list management for Indian district courts." },
     ],
   }),
